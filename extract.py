@@ -1,15 +1,5 @@
 import pandas as pd
-from sqlalchemy import (
-    BigInteger,
-    Column,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    Text,
-    inspect,
-    select,
-)
+from sqlalchemy import inspect, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from gmail_client import get_gmail_service
 from logging_utils import get_logger
@@ -17,6 +7,7 @@ from parser import clean_body, extract_auth_status, extract_body
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import os
+from db_schema import emails, label_history, metadata
 
 logger = get_logger(__name__)
 
@@ -30,9 +21,6 @@ def get_existing_ids(engine, email_ids: list[str]) -> set[str]:
 
     if not inspect(engine).has_table("emails"):
         return set()
-
-    metadata = MetaData()
-    emails = Table("emails", metadata, autoload_with=engine)
 
     with engine.begin() as conn:
         existing = conn.execute(select(emails.c.id).where(emails.c.id.in_(email_ids)))
@@ -166,7 +154,7 @@ def iter_message_batches(
 
 
 def stream_insert_messages(
-    api_query: str, max_results: int, engine, is_spam: int, batch_size: int = 500
+    api_query: str, max_results: int, engine, label: str, batch_size: int = 500
 ) -> int:
     """Consume streamed batches and insert them while tracking progress
 
@@ -185,14 +173,15 @@ def stream_insert_messages(
     ):
         if df_batch.empty:
             continue
-        df_batch["is_spam"] = is_spam
-        insert_emails_if_new(df=df_batch, engine=engine)
+        insert_emails_if_new(
+            df=df_batch, engine=engine, label=label, source="gmail_initial"
+        )
         total_inserted += len(df_batch)
         logger.info(f"Inserted {total_inserted} rows for query '{api_query}'")
     return total_inserted
 
 
-def insert_emails_if_new(df: pd.DataFrame, engine) -> None:
+def insert_emails_if_new(df: pd.DataFrame, engine, label: str, source: str) -> None:
     """Insert email rows into database and ignore ids that already exist
 
     strategy:
@@ -203,27 +192,23 @@ def insert_emails_if_new(df: pd.DataFrame, engine) -> None:
     if df.empty:
         return
 
-    metadata = MetaData()
-    emails = Table(
-        "emails",
-        metadata,
-        Column("id", String, primary_key=True),
-        Column("timestamp", BigInteger),
-        Column("subject", Text),
-        Column("clean_body", Text),
-        Column("spf", String),
-        Column("dkim", String),
-        Column("dmarc", String),
-        Column("is_spam", Integer),
-    )
-
     metadata.create_all(engine)
 
     records = df.to_dict(orient="records")
     stmt = sqlite_insert(emails).values(records)
+    label_records = [
+        {
+            "email_id": row["id"],
+            "label": label,
+            "source": source,
+        }
+        for row in records
+    ]
+    label_stmt = sqlite_insert(label_history).values(label_records)
 
     with engine.begin() as conn:
         conn.execute(stmt.on_conflict_do_nothing(index_elements=[emails.c.id]))
+        conn.execute(label_stmt)
 
 
 if __name__ == "__main__":
@@ -231,7 +216,7 @@ if __name__ == "__main__":
 
     database_url = os.getenv("DATABASE_URL", "")
     if not database_url:
-        raise RuntimeError("Please declare set the env variable DATABASE_URL")
+        raise RuntimeError("Please set the environment variable DATABASE_URL")
 
     engine = create_engine(database_url, echo=False)
 
@@ -239,14 +224,14 @@ if __name__ == "__main__":
         api_query="label:INBOX -label:SPAM",
         max_results=25_000,
         engine=engine,
-        is_spam=0,
-        batch_size=1000,
+        label="ham",
+        batch_size=2000,
     )
     total_spam = stream_insert_messages(
         api_query="label:SPAM",
         max_results=100,
         engine=engine,
-        is_spam=1,
+        label="spam",
         batch_size=100,
     )
     logger.info(f"Finished. no_spam={total_no_spam}, spam={total_spam}")
