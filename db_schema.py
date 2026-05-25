@@ -18,6 +18,7 @@ emails = Table(
     metadata,
     Column("id", String, primary_key=True),
     Column("timestamp", BigInteger),
+    Column("sender_email", String),
     Column("subject", Text),
     Column("clean_body", Text),
     Column("spf", String),

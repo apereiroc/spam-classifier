@@ -7,6 +7,7 @@ from parser import clean_body, extract_auth_status, extract_body
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import os
+from email.utils import parseaddr
 from db_schema import emails, label_history, metadata
 
 logger = get_logger(__name__)
@@ -108,14 +109,20 @@ def iter_message_batches(
                 payload = msg.get("payload", {})
                 headers = payload.get("headers", [])
 
-                # get subject
+                # get subject and sender email
                 subject = ""
+                sender_email = ""
                 for header in headers:
-                    if header["name"].lower() == "subject":
+                    header_name = header["name"].lower()
+                    if header_name == "subject":
                         subject = header["value"]
+                    elif header_name == "from":
+                        sender_email = parseaddr(header["value"])[1]
 
                 if not subject:
                     logger.warning("subject not found")
+                if not sender_email:
+                    logger.warning("sender not found")
 
                 # get body
                 body = extract_body(payload)
@@ -131,6 +138,7 @@ def iter_message_batches(
                     {
                         "id": email_id,
                         "timestamp": timestamp,
+                        "sender_email": sender_email,
                         "subject": subject,
                         "clean_body": cleaned_body,
                         "spf": spf,
@@ -220,13 +228,6 @@ if __name__ == "__main__":
 
     engine = create_engine(database_url, echo=False)
 
-    total_no_spam = stream_insert_messages(
-        api_query="label:INBOX -label:SPAM",
-        max_results=25_000,
-        engine=engine,
-        label="ham",
-        batch_size=2000,
-    )
     total_spam = stream_insert_messages(
         api_query="label:SPAM",
         max_results=100,
@@ -234,4 +235,13 @@ if __name__ == "__main__":
         label="spam",
         batch_size=100,
     )
+
+    total_no_spam = stream_insert_messages(
+        api_query="label:INBOX -label:SPAM",
+        max_results=25_000,
+        engine=engine,
+        label="ham",
+        batch_size=2000,
+    )
+
     logger.info(f"Finished. no_spam={total_no_spam}, spam={total_spam}")
