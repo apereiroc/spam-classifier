@@ -52,3 +52,11 @@ dataset_members = Table(
     Column("split", String, nullable=False),
     CheckConstraint("split IN ('train','val','test')"),
 )
+
+__all__ = [
+    "metadata",
+    "emails",
+    "label_history",
+    "dataset_versions",
+    "dataset_members",
+]

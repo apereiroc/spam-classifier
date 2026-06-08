@@ -3,6 +3,13 @@ import re
 
 from bs4 import BeautifulSoup
 
+__all__ = [
+    "decode_b64url",
+    "extract_body",
+    "clean_body",
+    "extract_auth_status",
+]
+
 
 def decode_b64url(data: str) -> str:
     if not data:
