@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-from db_schema import metadata
+from src.db.schema import metadata
 from src.gmail import get_gmail_service
 from src.logging import get_logger
 from src.data import stream_insert_messages
