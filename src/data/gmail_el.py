@@ -6,7 +6,7 @@ from googleapiclient.errors import HttpError
 from sqlalchemy import Engine, inspect, insert, select
 
 from db_schema import emails, label_history
-from logging_utils import get_logger
+from src.logging import get_logger
 from parser import clean_body, extract_auth_status, extract_body
 
 logger = get_logger(__name__)
@@ -118,7 +118,7 @@ def iter_message_batches(
             timestamp_raw = msg.get("internalDate")
             try:
                 timestamp = int(timestamp_raw)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 logger.warning(
                     f"Invalid timestamp for message '{email_id}': {timestamp_raw}. Using 0"
                 )

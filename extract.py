@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from db_schema import metadata
 from src.gmail import get_gmail_service
 from src.logging import get_logger
-from src.data.gmail_el import stream_insert_messages
+from src.data import stream_insert_messages
 
 logger = get_logger(__name__)
 
