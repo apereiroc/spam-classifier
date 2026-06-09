@@ -38,8 +38,8 @@ label_history = Table(
     Column("labeled_at", TIMESTAMP, server_default=func.current_timestamp()),
     CheckConstraint("label IN ('spam','ham','graymail','unknown')"),
 )
-Index("ix_label_history_email_id_labeled_at", label_history.c.email_id, label_history.c.labeled_at)
-Index("ix_label_history_label_email_id", label_history.c.label, label_history.c.email_id)
+Index("idx_email_id_labeled_at", label_history.c.email_id, label_history.c.labeled_at)
+Index("idx_label_email_id", label_history.c.label, label_history.c.email_id)
 dataset_versions = Table(
     "dataset_versions",
     metadata,
@@ -60,11 +60,3 @@ dataset_splits = Table(
     Column("split", String, nullable=False),
     CheckConstraint("split IN ('train','val','test')"),
 )
-
-__all__ = [
-    "metadata",
-    "emails",
-    "label_history",
-    "dataset_versions",
-    "dataset_splits",
-]
