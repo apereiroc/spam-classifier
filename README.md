@@ -15,7 +15,7 @@ The basic data engineering is working correctly, with emails tagged in the inbox
 
 - Table `emails`: contains the raw emails fetched from Gmail. Only the body is passed through a text cleaner before storage.
 - Table `label_history`: append-only label history to version labels over time (for example, when a message previously considered ham is later re-labeled as spam, or vice versa).
-- Table `dataset_versions` and `dataset_members`: used to freeze dataset snapshots and train/val/test splits for training reproducibility.
+- Table `dataset_versions` and `dataset_splits`: used to freeze dataset snapshots and train/val/test splits for training reproducibility.
 
 Split policy across versions: keep the same test set between versions in order to measure real model improvement. New examples are added only to the training split.
 
