@@ -39,9 +39,9 @@ I am using `uv` for this project. Eventually the real time system will operate i
      ```
    - Set `DATABASE_URL` in `.env` (for example: `sqlite:///emails.db`)
 3. Add Google API OAuth credentials file as `credentials.json`
-4. Extract your emails to the database, this can take several minutes.
+4. Extract your emails to the database with `uv run ingest-emails`, use `--help` to see the available options. Since it can take several minutes to complete with the default runtime parameters, a small batch can be ingested with
    - ```bash
-     uv run ingest-emails
+     uv run ingest-emails --spam-max-results 50 --ham-max-results 50
      ```
 
 On first run, a browser window will open for Gmail OAuth. The script then saves the data into the `emails` table.
