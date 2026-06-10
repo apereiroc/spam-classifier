@@ -29,14 +29,20 @@ Split policy across versions: keep the same test set between versions in order t
 
 I am using `uv` for this project. Eventually the real time system will operate in Docker containers
 
-1. Sync dependencies with uv. This will create a virtual environment:
-   - `uv sync`
+1. Sync dependencies with uv. This will create a virtual environment and install local CLI entry points from `[project.scripts]`:
+   - ```bash
+     uv sync
+     ```
 2. Copy the dotenv sample and fill it in:
-   - `cp env.sample .env`
+   - ```bash
+     cp env.sample .env
+     ```
    - Set `DATABASE_URL` in `.env` (for example: `sqlite:///emails.db`)
 3. Add Google API OAuth credentials file as `credentials.json`
-4. Run:
-   - `uv run python -m scripts.ingest_emails`
+4. Extract your emails to the database, this can take several minutes.
+   - ```bash
+     uv run ingest-emails
+     ```
 
 On first run, a browser window will open for Gmail OAuth. The script then saves the data into the `emails` table.
 
@@ -45,25 +51,25 @@ On first run, a browser window will open for Gmail OAuth. The script then saves 
 Run this to display the help message
 
 ```bash
-uv run python -m scripts.create_dataset_version --help
+uv run create-dataset-version --help
 ```
 
 Example of usage:
 
 ```bash
-uv run python -m scripts.create_dataset_version --version v0.1-sandbox --n-spam 50 --n-ham 100 --test-ratio 0.15 --seed 42 --notes "first test, let's see how it goes"
+uv run create-dataset-version --version v0.1-sandbox --n-spam 50 --n-ham 100 --test-ratio 0.15 --seed 42 --notes "first test, let's see how it goes"
 ```
 
 You can verify the versions created at your database
 
 ```bash
-uv run python -m scripts.get_dataset_versions
+uv run get-dataset-versions
 ```
 
-And also remove a specific version 
+And also remove a specific version
 
 ```bash
-uv run python -m scripts.remove_dataset_version --version <VERSION>
+uv run remove-dataset-version --version <VERSION>
 ```
 
 These scripts do not alter the `emails` main table. The database contains specific tables for managing the dynamic assignment of spam/ham labels and the assignment of email IDs to a dataset version that you have created
