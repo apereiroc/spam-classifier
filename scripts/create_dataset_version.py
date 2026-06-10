@@ -19,11 +19,22 @@ def parse_args():
     p.add_argument(
         "--version", required=True, help="Version identifier, e.g. v0.1-sandbox"
     )
-    p.add_argument("--n-spam", type=int, default=50)
-    p.add_argument("--n-ham", type=int, default=200)
-    p.add_argument("--test-ratio", type=float, default=0.15)
-    p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--notes", default="")
+    p.add_argument(
+        "--n-spam", type=int, default=50, help="Number of total spam samples"
+    )
+    p.add_argument("--n-ham", type=int, default=200, help="Number of total ham samples")
+    p.add_argument(
+        "--test-ratio",
+        type=float,
+        default=0.15,
+        help="Fraction of total samples dedicated to the test set",
+    )
+    p.add_argument("--seed", type=int, default=42, help="Seed passed to the RNG")
+    p.add_argument(
+        "--notes",
+        default="",
+        help="Notes describing the version. If null, the numbers describing the version will be used",
+    )
     return p.parse_args()
 
 

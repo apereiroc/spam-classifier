@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--version", required=True, help="Version identifier to remove")
+    p.add_argument("--version", required=True, help="Version identifier to be removed")
     return p.parse_args()
 
 
