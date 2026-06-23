@@ -60,3 +60,10 @@ dataset_splits = Table(
     Column("split", String, nullable=False),
     CheckConstraint("split IN ('train','val','test')"),
 )
+test_set_fixed = Table(
+    "test_set_fixed",
+    metadata,
+    Column("email_id", String, ForeignKey("emails.id"), primary_key=True),
+    Column("label", String, nullable=False),
+    Column("created_at", TIMESTAMP, server_default=func.current_timestamp()),
+)
