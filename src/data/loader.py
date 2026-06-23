@@ -4,33 +4,56 @@ from sqlalchemy import text, Engine
 
 
 def load_split(
-    engine: Engine, version: str, split: Literal["train", "test"]
+    engine: Engine, version: str | None = None, split: Literal["train", "test"] = "test"
 ) -> pd.DataFrame:
-    """Load a single split (train/test) for a given dataset version."""
+    """Load a dataset split. For training splits, provide version and split='train'.
+    For the fixed test set, use split='test' (version is ignored)."""
 
-    # check split type is valid
-    if split not in ["train", "test"]:
-        raise ValueError(f"Split should train or test, got `{split}`")
+    if split == "test":
+        query = text("""
+            SELECT
+                e.id,
+                e.timestamp,
+                e.sender_email,
+                e.subject,
+                e.clean_body,
+                e.spf,
+                e.dkim,
+                e.dmarc,
+                ts.label
+            FROM test_set ts
+            JOIN emails e ON e.id = ts.email_id
+        """)
+        df = pd.read_sql(query, engine)
+        return df
 
-    query = text("""
-        SELECT
-            e.id,
-            e.timestamp,
-            e.sender_email,
-            e.subject,
-            e.clean_body,
-            e.spf,
-            e.dkim,
-            e.dmarc,
-            ds.label
-        FROM dataset_splits ds
-        JOIN emails e ON e.id = ds.email_id
-        WHERE ds.version = :version AND ds.split = :split
-    """)
-    df = pd.read_sql(query, engine, params={"version": version, "split": split})
-    return df
+    if split == "train":
+        if not version:
+            raise ValueError("version is required for train split")
+        query = text("""
+            SELECT
+                e.id,
+                e.timestamp,
+                e.sender_email,
+                e.subject,
+                e.clean_body,
+                e.spf,
+                e.dkim,
+                e.dmarc,
+                ts.label
+            FROM train_set ts
+            JOIN emails e ON e.id = ts.email_id
+            WHERE ts.version = :version
+        """)
+        df = pd.read_sql(query, engine, params={"version": version})
+        return df
+
+    raise ValueError("split must be 'train' or 'test'")
 
 
 def load_dataset(engine: Engine, version: str) -> dict[str, pd.DataFrame]:
-    """Load all splits at once. Returns a dict {'train': df, 'test': df}."""
-    return {split: load_split(engine, version, split) for split in ("train", "test")}
+    """Load train and test splits. Train comes from the specified version, test is always the fixed test set."""
+    return {
+        "train": load_split(engine, version=version, split="train"),
+        "test": load_split(engine, split="test"),
+    }
