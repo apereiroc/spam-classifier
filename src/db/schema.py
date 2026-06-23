@@ -2,7 +2,6 @@ from sqlalchemy import (
     BigInteger,
     CheckConstraint,
     Column,
-    Float,
     ForeignKey,
     Integer,
     Index,
@@ -40,28 +39,25 @@ label_history = Table(
 )
 Index("idx_email_id_labeled_at", label_history.c.email_id, label_history.c.labeled_at)
 Index("idx_label_email_id", label_history.c.label, label_history.c.email_id)
-dataset_versions = Table(
-    "dataset_versions",
+train_versions = Table(
+    "train_versions",
     metadata,
     Column("version", String, primary_key=True),
     Column("created_at", TIMESTAMP, server_default=func.current_timestamp()),
     Column("notes", Text),
     Column("n_spam", Integer),
     Column("n_ham", Integer),
-    Column("test_ratio", Float),
     Column("seed", Integer),
 )
-dataset_splits = Table(
-    "dataset_splits",
+train_set = Table(
+    "train_set",
     metadata,
-    Column("version", String, ForeignKey("dataset_versions.version"), primary_key=True),
+    Column("version", String, ForeignKey("train_versions.version"), primary_key=True),
     Column("email_id", String, ForeignKey("emails.id"), primary_key=True),
     Column("label", String, nullable=False),
-    Column("split", String, nullable=False),
-    CheckConstraint("split IN ('train','val','test')"),
 )
-test_set_fixed = Table(
-    "test_set_fixed",
+test_set = Table(
+    "test_set",
     metadata,
     Column("email_id", String, ForeignKey("emails.id"), primary_key=True),
     Column("label", String, nullable=False),
