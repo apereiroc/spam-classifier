@@ -5,7 +5,7 @@ import sys
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, delete, select
 
-from src.db.schema import dataset_splits, dataset_versions
+from src.db.schema import train_set, train_versions
 from src.logging import get_logger
 
 logger = get_logger(__name__)
@@ -31,8 +31,8 @@ def main():
         with engine.begin() as conn:
             # first check whether the version exists in DB
             existing = conn.execute(
-                select(dataset_versions.c.version).where(
-                    dataset_versions.c.version == args.version
+                select(train_versions.c.version).where(
+                    train_versions.c.version == args.version
                 )
             ).fetchone()
 
@@ -41,13 +41,13 @@ def main():
 
             # delete splits for the version passed in args
             deleted_splits = conn.execute(
-                delete(dataset_splits).where(dataset_splits.c.version == args.version)
+                delete(train_set).where(train_set.c.version == args.version)
             ).rowcount
 
             # delete version for the version passed in args
             deleted_versions = conn.execute(
-                delete(dataset_versions).where(
-                    dataset_versions.c.version == args.version
+                delete(train_versions).where(
+                    train_versions.c.version == args.version
                 )
             ).rowcount
 
