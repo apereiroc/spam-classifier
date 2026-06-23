@@ -24,10 +24,10 @@ dependencies = [
 
 [project.scripts]
 ingest-emails = "scripts.ingest_emails:main"
-create-test-set-fixed = "scripts.create_test_set_fixed:main"
-create-dataset-version = "scripts.create_dataset_version:main"
-get-dataset-versions = "scripts.get_dataset_versions:main"
-remove-dataset-version = "scripts.remove_dataset_version:main"
+create-test-set = "scripts.create_test_set:main"
+create-train-version = "scripts.create_train_version:main"
+get-train-versions = "scripts.get_train_versions:main"
+remove-train-version = "scripts.remove_train_version:main"
 
 [tool.uv]
 package = true
